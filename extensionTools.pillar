@@ -1,0 +1,42 @@
+
+!!!Extending the debugging model with additional tools
+
+The StDebugger debugging model is extendable by registering tools directly in the debugger.
+The StDebugger has a dictionary in which extension tools are registered.
+Tools should register using the ''registerExtensionTool:'' method from StDebugger:
+
+[[[
+StDebugger>>registerExtensionTool: anExtension
+	^extensionTools at: anExtension debuggerExtensionKey put: anExtension
+]]]
+
+For example, Sindarin is a debugger API that extends the current Pharo debugging model.
+Tools extending the GUI of the StDebugger might want to use Sindarin to access additional debugging features.
+
+First, the Sindarin class must define a ''debuggerExtensionKey'' that returns a unique key for that tool:
+
+[[[
+SindarinDebugger class>>debuggerExtensionKey
+	^#sindarin
+]]]
+
+This method must also be defined on the instance side to make the key accessible to instances of SindarinDebugger:
+
+[[[
+SindarinDebugger>>debuggerExtensionKey
+	^self class debuggerExtensionKey
+]]]
+
+This key is used to register and access the instance of Sindarin extending an opened StDebugger.
+Accesses to extension tools are made through the ''extensionToolNamed: anDebuggignExtensionKey ifAbsent: aBlock'' interface of the StDebugger.
+
+Registering and accessing extension tools should be at the initiative of the debugger GUI extensions. For example, the Sindarin scripting tool extends the StDebugger GUI, and requires a Sindarin instance to work properly. This scripting tool will have to register its model (the Sindarin debugger instance) and access it when needed.
+
+
+However, lazy Accessor
+[[[
+StDebugger>>sindarinDebugger
+	^ self extensionToolNamed: SindarinDebugger debuggerExtensionKey
+         ifAbsent:
+            [ self registerExtensionTool: (SindarinDebugger attachTo: self session) ]
+]]]
